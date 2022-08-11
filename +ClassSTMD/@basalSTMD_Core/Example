@@ -1,0 +1,31 @@
+%% Example 
+% Example of base Small Target Motion Detectors(basalESTMD_Core)
+
+clc,clear,close all; 
+addpath('D:\Code'); % ADD PATH
+import ClassSTMD.* % import class
+obj = basalESTMD_Core(); % Instantiate the class
+obj.path0 = 'path0'; % Set the path of the dataset
+obj.StartFrame = 50; % Start frame, default 1
+obj.EndFrame = 300; % End frame, default 450, if set to 0, will always run upto stop
+obj.Imagetitle = 'GeneratingDataSet'; % Image file name
+obj.Imagetype = '.tif'; % Image file extension name
+% Custom image formats
+obj.get_ImageName = ...
+    @(path0,Imagetitle,Imagetype,NowFrame)...
+    [path0,'\\',Imagetitle,...
+    sprintf('%04d',NowFrame),Imagetype];
+
+% Progress bar: 0 indicates no display and 1 indicates display. 
+%   The default value is 0
+obj.IsWaitbar = 1; 
+obj.Isvisualize = 1; % Visualization or not
+test.IsSaveAsVideo = 1; % Is savethe Visualize video
+% save_path of IsSaveAsVideo
+test.Video_Par = {'C:\Users\HP\Desktop','basalESTMD'}; 
+
+% Program started
+obj.Run() 
+
+
+
