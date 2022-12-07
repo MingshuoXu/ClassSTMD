@@ -47,24 +47,24 @@ classdef ToolFun < handle
             kernel_F(end) = - kernel_K(end);
         end
         
-        function ESTMD_InhibitionKernel = ...
-                Generalize_ESTMD_Lateral_InhibitionKernel(...
+        function InhibitionKernel_W2 = ...
+                Generalize_Lateral_InhibitionKernel_W2(...
                 KernelSize,Sigma1,Sigma2,e,rho,A,B)
-            % 函数说明
+            %Generalize_Lateral_InhibitionKernel_W2
             % 该函数用于生成 DSTMD 的侧面抑制卷积核, DoG 形式
             % W(x,y) = A*[g_1(x,y)] - B[-g_1(x,y)]    % [x]   max(x,0)
             % g_1 = G_1(x,y) - e*G_2(x,y) - rho
-            
+            %
             % 参数说明
             % KernelSize  Inhibition Kernel 的大小，一般为奇数
             % Sigma1      Gauss 函数 1 的 Sigma
             % Sigma2      Gauss 函数 2 的 Sigma
             % e           参数 e
-            
+            %
             % Author: Hongxin Wang
             % Date: 2021-05-13
             % LastEdit: Mingshuo Xu
-            % LastEditTime: 2022-07-11 
+            % LastEditTime: 2022-07-11
             %% ----------------------------------------------%
             % DoG
             if nargin < 1
@@ -72,13 +72,13 @@ classdef ToolFun < handle
             end
             % 当物体大小为 size 5*5 pixels 时的最优参数（1.5，3.0）
             if nargin < 2
-                Sigma1 = 1.25;
+                Sigma1 = 1.5;
             end
             if nargin < 3
-                Sigma2 = 2.5;
+                Sigma2 = 3;
             end
             if nargin < 4
-                e = 1.2;
+                e = 1.0;
             end
             if nargin < 5
                 rho = 0;
@@ -87,7 +87,7 @@ classdef ToolFun < handle
                 A = 1;
             end
             if nargin < 7
-                B = 3.5;
+                B = 3;
             end
             % 将卷积核大小设置为奇数
             if mod(KernelSize,2) == 0
@@ -110,7 +110,7 @@ classdef ToolFun < handle
             Positive_Component = max(DoG_Filter,0);
             Negative_Component = max(-DoG_Filter,0);
             % Inhibition Kernel
-            ESTMD_InhibitionKernel = A*Positive_Component - B*Negative_Component;
+            InhibitionKernel_W2 = A*Positive_Component - B*Negative_Component;
             
         end
         
@@ -180,102 +180,207 @@ classdef ToolFun < handle
             DSTMD_Directional_Inhibition_Kernel = reshape(Inhibition_Kernel,[1 1 KernelSize]);
         end
         
-        function DSTMD_InhibitionKernel = ...
-                Generalize_DSTMD_Lateral_InhibitionKernel(...
-                KernelSize,Sigma1,Sigma2,e,rho,A,B)
+        function Filters = Generalize_T1_Neural_Kernels(...
+                W_T_FilterNum, FilterSize, Alpha, Sigma)
+            % Ref: Construction and Evaluation of an Integrated Dynamical Model of
+            % Visual Motion Perception
             
             % 函数说明
-            % 该函数用于生成 DSTMD 的侧面抑制卷积核, DoG 形式
-            % W(x,y) = A*[g_1(x,y)] - B[-g_1(x,y)]    % [x]   max(x,0)
-            % g_1 = G_1(x,y) - e*G_2(x,y) - rho
+            % 该函数用于生成 STMDPlus 的的 T1 神经元的卷积核
+            % 即：Filter  = G(x-a*cos,y-a*sin)-G(x+a*cos,y+a*sin)
             
             % 参数说明
-            % KernelSize  Inhibition Kernel 的大小，一般为奇数
-            % Sigma1      Gauss 函数 1 的 Sigma
-            % Sigma2      Gauss 函数 2 的 Sigma
-            % e           参数 e
+            % W_T_FilterNum     滤波器个数
+            % FilterSize        滤波器个数尺寸
+            % Alpha             高斯函数中心与滤波器中心的距离
+            % Sigma             高斯函数的 Sigma
             
-            %% ----------------------------------------------%
-            % DoG
-            if ~exist('KernelSize','var')
-                KernelSize = 15;
+            % 对于大小为 5*5 的物体，
+            % W_T_FilterNum = 4
+            % FilterSize = 11
+            % Sigma = 1.5
+            % Alpha = 3
+            
+            %% Parameter Setting
+            if nargin < 1
+                W_T_FilterNum = 4;
             end
-            
-            % 当物体大小为 size 5*5 pixels 时的最优参数（1.5，3.0）
-            if ~exist('Sigma1','var')
-                Sigma1 = 1.25;
+            if nargin < 2
+                FilterSize = 11;
+            elseif mod(FilterSize,2) == 0
+                FilterSize = FilterSize + 1;
+                %若滤波器大小为偶数，则强制设置为奇数
             end
-            
-            if ~exist('Sigma2','var')
-                Sigma2 = 2.5;
+            if nargin < 3
+                Alpha = 3.0;
             end
-            
-            if ~exist('e','var')
-                e = 1.2;
-            end
-            
-            if ~exist('rho','var')
-                rho = 0;
-            end
-            
-            if ~exist('A','var')
-                A = 1;
-            end
-            
-            if ~exist('B','var')
-                B = 3.5;
+            if nargin < 4
+                Sigma = 1.5;
             end
             
             
-            % 将卷积核大小设置为奇数
-            Flag = mod(KernelSize,2);
-            if Flag == 0
-                KernelSize = KernelSize +1;
+            %% Main Function
+            Theta = zeros(1,W_T_FilterNum);
+            for i = 1:W_T_FilterNum
+                Theta(i) = (i-1) * pi / W_T_FilterNum;
             end
             
-            % 确定卷积核的中心
-            CenX = round(KernelSize/2);
-            CenY = round(KernelSize/2);
-            % 生成网格
-            [X,Y] = meshgrid(1:KernelSize,1:KernelSize);
-            % 网格平移
-            ShiftX = X-CenX;
-            ShiftY = Y-CenY;
+            % 用于存储生成的滤波器
+            Filters = zeros(FilterSize,FilterSize,W_T_FilterNum);
+            % 生成坐标
+            r = floor(FilterSize/2);
+            [X,Y] = meshgrid(-r:r, -r:r);
             
-            % 生成 Gauss 函数 1 和 2
-            Gauss1 = (1/(2*pi*Sigma1^2))...
-                * exp(-(ShiftX.*ShiftX + ShiftY.*ShiftY)/(2*Sigma1^2));
-            Gauss2 = (1/(2*pi*Sigma2^2))...
-                * exp(-(ShiftX.*ShiftX + ShiftY.*ShiftY)/(2*Sigma2^2));
-            
-            % 生成 DoG, 两高斯函数相减
-            DoG_Filter = Gauss1 - e*Gauss2 - rho;
-            
-            % max(x,0)
-            Positive_Component = (abs(DoG_Filter) + DoG_Filter)*0.5;
-            Negative_Component = (abs(DoG_Filter) - DoG_Filter)*0.5;
-            % Inhibition Kernel
-            
-            DSTMD_InhibitionKernel = A*Positive_Component - B*Negative_Component;
+            for k = 1:W_T_FilterNum
+                % 确定两个高斯函数的中心
+                X1 = X - Alpha*cos(Theta(k));
+                Y1 = Y - Alpha*sin(Theta(k));
+                X2 = X + Alpha*cos(Theta(k));
+                Y2 = Y + Alpha*sin(Theta(k));
+                
+                % 生成两个高斯函数
+                Gauss1 = (1/(2*pi*Sigma^2))*(exp(-(X1.^2+Y1.^2)./(2*Sigma^2)));
+                Gauss2 = (1/(2*pi*Sigma^2))*(exp(-(X2.^2+Y2.^2)./(2*Sigma^2)));
+                
+                % Filter = Gauss1 - Gauss2;
+                Filters(:,:,k) = Gauss1 - Gauss2;
+            end
             
         end
         
-        function Output = Conv_3(Input,Kernal)
-            % 特别注意，这里输入三维矩阵，但是返回值只有二维！！！
-            % 三维矩阵对时间维度的卷积，节省内存的实现方法（相对于convn）
-            % 只计及返回Input(:,:,end)的卷积，但这个过程要用到其他的Input(:,:,t)
-            % 注意到这里的Kernal是向量（MATLAB中的尺寸是1*k2）
-            % Input(:,:,end)对应Kernal（1); Input(:,:,end-1)对应Kernal（2)...
-            [m,n,k1] = size(Input);
-            k2 = size(Kernal,2);
-            length = min(k1,k2);
-            Output = zeros(m,n);
-            for t = 1:length
-                if abs(Kernal(t)) > 1e-16
-                Output = Output + Input(:,:,k1+1-t) * Kernal(t);
+        function Attention_Kernal = Generalize_Attention_Kernal(...
+                kernal_size, Zeta, Theta)
+            %INIT_ATTENTION_KERNAL 此处显示有关此函数的摘要
+            %   此处显示详细说明
+            if nargin < 1
+                kernal_size = 17;
+            elseif mod(kernal_size,2) == 0
+                kernal_size = kernal_size + 1;
+            end
+            if nargin < 2
+                Zeta = [2, 2.5, 3, 3.5];
+            end
+            if nargin < 3
+                Theta = [0, pi/4, pi/2, pi*3/4];
+            end
+            
+            r = length(Zeta);
+            s = length(Theta);
+            
+            Attention_Kernal = cell(r,s);
+            
+            Center = ceil(kernal_size/2);
+            
+            [Y,X] = meshgrid(1:kernal_size, 1:kernal_size);
+            % 网格平移
+            ShiftX = X-Center;
+            ShiftY = Y-Center;
+            % The plane coordinate system is the matrix coordinate system 
+            % rotated 90 degrees counterclockwise.
+            Theta = Theta + pi/2;
+            
+            for i = 1:r
+                for j = 1:s
+                    jj = mod(s-j+1,s)+1;
+                    Attention_Kernal{i,jj} =  2 / pi / Zeta(i)^4                         ...
+                        .* ( Zeta(i)^2 - (ShiftX*cos(Theta(j))+ShiftY*sin(Theta(j))).^2 ) ...
+                        .* exp( -(ShiftX.^2+ShiftY.^2)/2/Zeta(i)^2 );
                 end
             end
+
         end
+        
+        function Prediction_Kernal = Generalize_Prediction_Kernal(...
+                Vel, Delta_t, filter_size, FilterNum, zeta, eta)
+            %INIT_ATTENTION_KERNAL 此处显示有关此函数的摘要
+            %   此处显示详细说明
+            if nargin < 1
+                Vel = 0.25;
+            end
+            if nargin < 2
+                Delta_t = 25;
+            end
+            if nargin < 3
+                filter_size = 25;
+            end
+            if nargin < 4
+                FilterNum = 8;
+            end
+            if nargin < 5
+                zeta = 2;
+            end
+            if nargin < 6
+                eta = 2.5;
+            end
+            
+            Prediction_Kernal = zeros(filter_size, filter_size, FilterNum);
+            Center = ceil(filter_size/2);
+            
+            [Y,X] = meshgrid(1:filter_size, 1:filter_size);
+            % 网格平移
+            ShiftX = X - Center;
+            ShiftY = Y - Center;
+              
+            fai = atan2(ShiftY, ShiftX);   
+            Delta_X =  Vel * Delta_t * cos(fai);
+            Delta_Y =  Vel * Delta_t * sin(fai);
+            
+            for ii = 1:FilterNum
+                temp = exp(                                                ...
+                    - ((ShiftX-Delta_X).^2+(ShiftY-Delta_Y).^2 ) /2/zeta^2  ...
+                    + eta * cos( fai- (FilterNum-ii+1)*2*pi/FilterNum )                    );
+                temp(Center,Center) = 0;
+                Prediction_Kernal(:,:,ii) = temp./ sum(temp(:));
+            end
+
+        end
+        %%
+        %         function Output = Conv_3(Input, Kernal, head_pointer)
+        %             % 特别注意，这里输入三维矩阵，但是返回值只有二维！！！
+        %             % 三维矩阵对时间维度的卷积，节省计算量的实现方法（相对于convn）
+        %             % 只计及返回Input(:,:,end)的卷积，但这个过程要用到其他的Input(:,:,t)
+        %             % 注意到这里的Kernal是向量（MATLAB中的尺寸是1*k2）
+        %             % Input(:,:,end)对应Kernal（1); Input(:,:,end-1)对应Kernal（2)...
+        %
+        %
+        %             [m,n,k1] = size(Input);
+        %             if ~exist('head_pointer','var')
+        %                 % 设置头指针为了节省其他步骤的存储矩阵的计算用时
+        %                 head_pointer = k1;
+        %             end
+        %             Kernal = squeeze(Kernal);
+        %             if ~isvector(Kernal)
+        %                 error('The Kernel must be a vector! ');
+        %             end
+        %
+        %             k2 = length(Kernal);
+        %             len = min(k1,k2);
+        %             Output = zeros(m,n);
+        %
+        %             for t = 1:len
+        %                 if abs(Kernal(t)) > 1e-16
+        %                     j = mod(head_pointer-t, k1);
+        %                     % mod后的取值范围最小为0，但是MATLAB的数组下标从1开始，因此统一加1
+        %                     Output = Output + Input(:,:,j+1) * Kernal(t);
+        %                 end
+        %             end
+        %
+        %         end
+
+        %         function Output = Conv_3_3(Input,Kernal)
+        %             % 特别注意，这里输入三维矩阵，但是返回值只有二维！！！
+        %             % 三维矩阵对时空核的卷积，节省计算量的实现方法（相对于convn）
+        %             % 只计及返回Input(:,:,end)的卷积，但这个过程要用到其他的Input(:,:,t)
+        %             % 注意到这里的Kernal也是三维的
+        %             % Input(:,:,end)对应Kernal（:,:,1); Input(:,:,end-1)对应Kernal（:,:,2)...
+        %             [m,n,k1] = size(Input);
+        %             k2 = size(Kernal,3);
+        %             length = min(k1,k2);
+        %             Output = zeros(m,n);
+        %             for t = 1:length
+        %                 Output = Output + conv2(Input(:,:,k1+1-t), Kernal(:,:,t), 'same');
+        %             end
+        %         end
         
     end % methods(Static)
     

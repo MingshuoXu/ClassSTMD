@@ -10,6 +10,6 @@ function Read_Image2gray(self)
     catch
         self.InputState = 0;
         self.EndFrame = self.NowFrame - 1;
-        self.Matrix_Output(:,:,self.NowFrame:end) = [];
+        self.Cell_Output(self.NowFrame:end) = [];
     end
 end

@@ -6,25 +6,25 @@ function Init(self)
         self.Gammakernel_3_len = 3 * ceil(self.Gammakernel_3_Tau);
     end
     if isempty(self.LMCs_len)
-        self.LMCs_len = self.Gammakernel_3_Tau;
+        self.LMCs_len = 2;
     end
     
     % Real-time detection, dead loop
     if self.EndFrame == 0
         self.StartFrame = 1;
         self.Isvisualize = 1;
-        if isempty(self.IsRecondOutput)
-            self.IsRecondOutput = 0;
+        if isempty(self.IsRecordOutput)
+            self.IsRecordOutput = 0;
         end
-    elseif isempty(self.IsRecondOutput)
-        self.IsRecondOutput = 1;
+    elseif isempty(self.IsRecordOutput)
+        self.IsRecordOutput = 1;
     end
     
     % init kernel
     self.init_GaussFilter();
     self.init_Gammakernel_3();
-    self.ESTMD_Lateral_Inhibition_Kernel = ...
-        ClassSTMD.ToolFun.Generalize_ESTMD_Lateral_InhibitionKernel();
+    self.InhibitionKernel_W2 = ...
+        ClassSTMD.ToolFun.Generalize_Lateral_InhibitionKernel_W2();
     
     % gets the data set picture size
     self.NowFrame = self.StartFrame;
@@ -32,13 +32,13 @@ function Init(self)
     
     % allocate memory
     [self.IMAGE_H,self.IMAGE_W] = size(self.Input);
-    self.Matrix_OFF_Channel = ...
-        zeros(self.IMAGE_H,self.IMAGE_W,self.Gammakernel_3_len);
-    self.Matrix_Photoreceptors_Output = ...
-        zeros(self.IMAGE_H,self.IMAGE_W,self.LMCs_len);
-    if self.IsRecondOutput
-        self.Matrix_Output = ...
-            zeros(self.IMAGE_H,self.IMAGE_W,self.EndFrame);
+    
+    self.Cell_Photoreceptors_Output = cell(self.LMCs_len, 1);
+    
+    self.Cell_OFF_Channel = cell(self.Gammakernel_3_len, 1);
+    
+    if self.IsRecordOutput
+        self.Cell_Output = cell(self.EndFrame, 1);
     end
     
     % instantiate the visualization class and assign the handle
@@ -59,7 +59,7 @@ function Init(self)
             % Instantiate the figure handle class
             self.H.Establish_fig_handle();
             if ~isempty(self.visualize_Threshold)
-                self.H.MaxOperation_Threshold = self.visualize_Threshold;
+                self.H.Show_Threshold = self.visualize_Threshold;
             end
         end
         if self.IsWaitbar == 1

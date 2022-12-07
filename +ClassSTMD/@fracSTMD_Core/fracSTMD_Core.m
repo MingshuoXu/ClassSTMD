@@ -28,7 +28,6 @@ classdef fracSTMD_Core < ClassSTMD.basalSTMD_Core
     properties
         FractionalDerivative_Order;
         FractionalDerivativeKernel_len;
-        
     end
     properties(Hidden)
         FractionalDerivativeKernel;  
@@ -67,8 +66,9 @@ classdef fracSTMD_Core < ClassSTMD.basalSTMD_Core
             self.init_FractionalDerivativekernel();
             % Initialization of inherited functions
             Init@ClassSTMD.basalSTMD_Core(self);
-            self.ESTMD_Lateral_Inhibition_Kernel = ...
-                ClassSTMD.ToolFun.Generalize_ESTMD_Lateral_InhibitionKernel(...
+            % Regenerate the inhibitory Kernel
+            self.InhibitionKernel_W2 = ...
+                ClassSTMD.ToolFun.Generalize_Lateral_InhibitionKernel_W2(...
                 15, 1.5, 3, 1.8, 0, 1, 3);
         end
         

@@ -6,9 +6,9 @@ function Lobula(self)
     self.Correlation_Output = self.ON_Channel .* self.Delay_OFF_Channel;
     % Lateral Inhibition Mechanism
     self.Lateral_Inhibition_Output = ...
-        conv2(self.Correlation_Output,self.ESTMD_Lateral_Inhibition_Kernel,'same');
+        conv2(self.Correlation_Output, self.InhibitionKernel_W2, 'same');
     % Half-wave Rectification
-    self.Lobula_Output = max(self.Lateral_Inhibition_Output,0);
+    self.Lobula_Output = self.HalfWaveR(self.Lateral_Inhibition_Output);
 end
 
 

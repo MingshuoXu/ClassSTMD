@@ -29,37 +29,25 @@ classdef ESTMD_Core < ClassSTMD.basalSTMD_Core
     %   LastEditTime: 2022-08-11  
     
     properties
+    end
+    properties(Hidden)
         Gammakernel_1_Order = 2;
         Gammakernel_1_Tau = 3;
         Gammakernel_2_Order = 6;
         Gammakernel_2_Tau = 9;
-    end
-    properties(Hidden)
         Gammakernel_1_len;
         Gammakernel_2_len;
-        Gammakernel_1;
-        Gammakernel_2;
-        GammaFun1_Output;
-        GammaFun2_Output;
+        Lamina_Filter;
+        Lamina_Inhibition;
     end
     
     methods
         % Constructor function
         function self = ESTMD_Core()
             self = self@ClassSTMD.basalSTMD_Core();
+            self.Lamina_Inhibition = ClassSTMD.Lamina_Lateral_Inhibition();
         end
         
-        % Some initialization kernel function
-        function init_Gammakernel_1_2(self)
-            self.Gammakernel_1 = ClassSTMD.ToolFun.Generalize_Gammakernel(...
-                self.Gammakernel_1_Order,...
-                self.Gammakernel_1_Tau,...
-                self.Gammakernel_1_len );
-            self.Gammakernel_2 = ClassSTMD.ToolFun.Generalize_Gammakernel(...
-                self.Gammakernel_2_Order,...
-                self.Gammakernel_2_Tau,...
-                self.Gammakernel_2_len);
-        end
         % Initialize function
         function Init(self)
             % weakly dependent variable
@@ -72,18 +60,25 @@ classdef ESTMD_Core < ClassSTMD.basalSTMD_Core
             if isempty(self.LMCs_len)
                 self.LMCs_len = max(self.Gammakernel_1_len,self.Gammakernel_2_len);
             end
-            % init kernel
-            self.init_Gammakernel_1_2();
+            
             % Initialization of inherited functions
             Init@ClassSTMD.basalSTMD_Core(self);
-            self.ESTMD_Lateral_Inhibition_Kernel = ...
-                ClassSTMD.ToolFun.Generalize_ESTMD_Lateral_InhibitionKernel(...
-                15, 1.5, 3, 1.5, 0, 1, 3);
+            
+            % init lamina filter 
+            self.Lamina_Filter = ClassSTMD.Gamma_Filter(...
+                self.Gammakernel_1_Order,...
+                self.Gammakernel_1_Tau,...
+                self.Gammakernel_1_len,...
+                self.Gammakernel_2_Order,...
+                self.Gammakernel_2_Tau,...
+                self.Gammakernel_2_len  );
         end
         
     end
     methods % The function body is outside the class function
         Lamina(self); % lamina layer
+        Medulla(self); % medulla layer
+        Lobula(self); % lobula layer
     end
 end
 

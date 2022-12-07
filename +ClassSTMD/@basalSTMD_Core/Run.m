@@ -8,7 +8,7 @@ function Run(self)
     while true
         self.Read_Image2gray(); % matrix the input image
         
-        % Set the stop statement
+        %% Set the stop statement
         if self.InputState == 0 || ...
                 (self.EndFrame>0 && self.NowFrame > self.EndFrame)
             break;
@@ -22,24 +22,28 @@ function Run(self)
             end
         end
         
-        
+        %% STMD neural network
         self.Retina(); % retina layer
         self.Lamina(); % lamina layer
         self.Medulla(); % medulla layer
         self.Lobula(); % lobula layer
-        if self.IsRecondOutput
-            % recond output
-            self.RecondOutput();
+        
+        %% Record output
+        if self.IsRecordOutput
+            self.RecordOutput();
         end
         
+        %% display progress bar
         if self.IsWaitbar
-            % display progress bar
             self.H.wait_BAR(self.NowFrame,self.StartFrame,self.EndFrame);
         end
+        
+        %% visualize the output
         if self.Isvisualize
-            % visualize the output
             self.Visualize();
         end
+        
+        %% 
         self.NowFrame = self.NowFrame + 1;
     end
     

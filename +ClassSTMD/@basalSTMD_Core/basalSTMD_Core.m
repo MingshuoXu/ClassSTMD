@@ -33,7 +33,7 @@ classdef basalSTMD_Core < handle
         GaussFilter_SIZE = 3;
         % sigma of gauss filter in retina layer
         GaussFilter_SIGMA = 1;
-        % order of ganna kernel in madulla layer to delay the off channel
+        % order of gamma kernel in madulla layer to delay the off channel
         Gammakernel_3_Order = 12;
         % time delay paramerer of ganna kernel in madulla layer
         %   to delay the off channel
@@ -57,7 +57,7 @@ classdef basalSTMD_Core < handle
         % a parameter about whether to save the visual output as a video
         IsSaveAsVideo = 0;
         % Whether to use a matrix to store the Output of each frame
-        IsRecondOutput;
+        IsRecordOutput;
     end
     properties(Hidden)
         % image name
@@ -76,7 +76,7 @@ classdef basalSTMD_Core < handle
         % verify that the input image is empty
         InputState = 0;
         % the lateral inhibition kernel in lobula layer
-        ESTMD_Lateral_Inhibition_Kernel;
+        InhibitionKernel_W2;
         % current time input matrix
         original_image;
         % current time input matrix
@@ -84,7 +84,7 @@ classdef basalSTMD_Core < handle
         % retina layer output in current time
         Photoreceptors_Output;
         % retina layer output in a period of time
-        Matrix_Photoreceptors_Output;
+        Cell_Photoreceptors_Output;
         % lamina layer output in current time
         Lamina_Output;
         % Tm3 cells output of medulla layer in current time
@@ -92,9 +92,9 @@ classdef basalSTMD_Core < handle
         % Tm2 cells output of medulla layer in current time
         OFF_Channel;
         % Tm3 cells output of medulla layer in a period of time
-        Matrix_ON_Channel;
+        Cell_ON_Channel;
         % Tm2 cells output of medulla layer in a period of time
-        Matrix_OFF_Channel;
+        Cell_OFF_Channel;
         % Tm1 cells output of medulla layer in current time
         Delay_OFF_Channel;
         % output of multiply Tm3 cells by Tm1 cells
@@ -105,9 +105,13 @@ classdef basalSTMD_Core < handle
         %   the positive part of the Lateral_Inhibition_Output
         Lobula_Output;
         % output of lobula layer in a period of time
-        Matrix_Output;
+        Cell_Output;
+        % The direction of movement of the small target
+        Direction;
         % the direction in a period of time
-        Matrix_Direction;
+        Cell_Direction;
+        % 
+        Output;
         % the effective length of Tm2 cells delay in convolution
         Gammakernel_3_len;
         % record data parameters for debugging
@@ -128,8 +132,9 @@ classdef basalSTMD_Core < handle
         get_ImageName;
         % A parameter controls the truncation threshold in the visualization
         visualize_Threshold;
-        % The direction of movement of the small target
-        Direction;
+    end
+    properties(Access = protected, Hidden)
+        HalfWaveR = @(x)ClassSTMD.Half_Wave_Rectification(x);
     end
     
     methods
@@ -152,14 +157,15 @@ classdef basalSTMD_Core < handle
         end
     end
     methods % The function body is outside the class function
-        Init(self) % Initialize function
+        Init(self); % Initialize function
+        getImageName(self); % Set the name format of the image
         Read_Image2gray(self); % Accept input and perform RGB binarization
         Retina(self); % retina layer
         Lamina(self); % lamina layer
         Medulla(self); % medulla layer
         Lobula(self); % lobula layer
-        RecondOutput(self) % recond output
-        Visualize(self) % visualization
+        RecordOutput(self); % Record output
+        Visualize(self); % visualization
         Run(self); % start function of small target motion detector
     end
     
