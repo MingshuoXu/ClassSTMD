@@ -30,7 +30,7 @@ obj.get_ImageName = ...
     sprintf('%04d',NowFrame),Imagetype];
 %}
 demo_obj.IsSaveAsVideo = true; % Is savethe Visualize video
-demo_obj.Video_Par = {'.\result','basalESTMD'};
+demo_obj.Video_Par = {'.\result', whos('demo_obj').class(11:end-5)};
 
 %% Set parameters
 demo_obj.StartFrame = 1; % Start frame, default 1
