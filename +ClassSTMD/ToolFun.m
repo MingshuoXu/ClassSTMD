@@ -292,8 +292,7 @@ classdef ToolFun < handle
         
         function Prediction_Kernal = Generalize_Prediction_Kernal(...
                 Vel, Delta_t, filter_size, FilterNum, zeta, eta)
-            %INIT_ATTENTION_KERNAL 此处显示有关此函数的摘要
-            %   此处显示详细说明
+            
             if nargin < 1
                 Vel = 0.25;
             end
@@ -313,7 +312,8 @@ classdef ToolFun < handle
                 eta = 2.5;
             end
             
-            Prediction_Kernal = zeros(filter_size, filter_size, FilterNum);
+            Prediction_Kernal = cell(FilterNum, 1);
+            [Prediction_Kernal{:}] = deal(zeros(filter_size, filter_size));
             Center = ceil(filter_size/2);
             
             [Y,X] = meshgrid(1:filter_size, 1:filter_size);
@@ -326,14 +326,16 @@ classdef ToolFun < handle
             Delta_Y =  Vel * Delta_t * sin(fai);
             
             for ii = 1:FilterNum
-                temp = exp(                                                ...
-                    - ((ShiftX-Delta_X).^2+(ShiftY-Delta_Y).^2 ) /2/zeta^2  ...
-                    + eta * cos( fai- (FilterNum-ii+1)*2*pi/FilterNum )                    );
+                temp = exp( ...
+                    -((ShiftX-Delta_X).^2+(ShiftY-Delta_Y).^2)/2/zeta^2 ...
+                    + eta * cos(fai-(FilterNum-ii+1)*2*pi/FilterNum ) ...
+                    );
                 temp(Center,Center) = 0;
-                Prediction_Kernal(:,:,ii) = temp./ sum(temp(:));
+                Prediction_Kernal{ii} = temp./ sum(temp(:));
             end
 
         end
+        
         %%
         %         function Output = Conv_3(Input, Kernal, head_pointer)
         %             % 特别注意，这里输入三维矩阵，但是返回值只有二维！！！

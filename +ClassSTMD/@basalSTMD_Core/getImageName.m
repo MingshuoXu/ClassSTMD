@@ -1,6 +1,6 @@
 function getImageName(self)
     %getImageName set the name format of the image
-    
+    %
     % You can set the name format of the image to read through the handle
     % function, such as:
     %     obj.get_ImageName = ...

@@ -29,63 +29,63 @@ classdef basalSTMD_Core < handle
     %   LastEditTime: 2022-08-11  
     
     properties
-        % size of gauss filter in retina layer
+        % Size of gauss filter in retina layer
         GaussFilter_SIZE = 3;
-        % sigma of gauss filter in retina layer
+        % Sigma of gauss filter in retina layer
         GaussFilter_SIGMA = 1;
-        % order of gamma kernel in madulla layer to delay the off channel
+        % Order of gamma kernel in madulla layer to delay the off channel
         Gammakernel_3_Order = 12;
-        % time delay paramerer of ganna kernel in madulla layer
+        % Time delay paramerer of ganna kernel in madulla layer
         %   to delay the off channel
         Gammakernel_3_Tau = 25;
-        % the path of input image sequence
+        % The path of input image sequence
         path0;
-        % the Imagetitle of input image sequence
+        % The Imagetitle of input image sequence
         Imagetitle = 'GeneratingDataSet';
-        % the Imagetype of input image sequence
+        % The Imagetype of input image sequence
         Imagetype = '.tif';
-        % the start frame of model working
+        % The start frame of model working
         StartFrame = 1;
-        % the end frame of model working
+        % The end frame of model working
         EndFrame = 450;
         % Sampling frequency of the input video
         SamplingFrequency;
-        % a parameter about whether to display progress bar
-        IsWaitbar = 1;
-        % a parameter about whether to visualize the output
-        Isvisualize = 0;
-        % a parameter about whether to save the visual output as a video
-        IsSaveAsVideo = 0;
-        % Whether to use a matrix to store the Output of each frame
-        IsRecordOutput;
+        % A parameter about whether to display progress bar
+        IsWaitbar = true;
+        % A parameter about whether to visualize the output
+        Isvisualize = false;
+        % A parameter about whether to save the visual output as a video
+        IsSaveAsVideo = false;
+        % Whether to use a matrix to store the output of each frame
+        IsRecordOutput = false;
     end
     properties(Hidden)
-        % image name
+        % Image name
         ImageName;
-        % the height of input image
+        % The height of input image
         IMAGE_H;
-        % the width of input image
+        % The width of input image
         IMAGE_W;
-        % the GaussFilter with size = GaussFilter_SIZE
+        % The GaussFilter with size = GaussFilter_SIZE
         %                 and sigma = GaussFilter_SIGMA
         GaussFilter;
-        % the effective length of LMCs in convolution
+        % The effective length of LMCs in convolution
         LMCs_len;
-        % the gamma kernel3 used in off delay
+        % The gamma kernel3 used in off delay
         Gammakernel_3;
-        % verify that the input image is empty
+        % Verify that the input image is empty
         InputState = 0;
-        % the lateral inhibition kernel in lobula layer
+        % The lateral inhibition kernel in lobula layer
         InhibitionKernel_W2;
-        % current time input matrix
+        % Current time input matrix
         original_image;
-        % current time input matrix
+        % Current time input matrix
         Input;
-        % retina layer output in current time
+        % Retina layer output in current time
         Photoreceptors_Output;
-        % retina layer output in a period of time
+        % Retina layer output in a period of time
         Cell_Photoreceptors_Output;
-        % lamina layer output in current time
+        % Lamina layer output in current time
         Lamina_Output;
         % Tm3 cells output of medulla layer in current time
         ON_Channel;
@@ -97,30 +97,30 @@ classdef basalSTMD_Core < handle
         Cell_OFF_Channel;
         % Tm1 cells output of medulla layer in current time
         Delay_OFF_Channel;
-        % output of multiply Tm3 cells by Tm1 cells
+        % Output of multiply Tm3 cells by Tm1 cells
         Correlation_Output;
         % The output obtained by lateral suppression of Correlation_Output
         Lateral_Inhibition_Output;
-        % output of lobula layer in current time, ...
+        % Output of lobula layer in current time, ...
         %   the positive part of the Lateral_Inhibition_Output
         Lobula_Output;
-        % output of lobula layer in a period of time
+        % Output of lobula layer in a period of time
         Cell_Output;
         % The direction of movement of the small target
         Direction;
-        % the direction in a period of time
+        % The direction in a period of time
         Cell_Direction;
-        % 
+        % The output matrix in current time
         Output;
-        % the effective length of Tm2 cells delay in convolution
+        % The effective length of Tm2 cells delay in convolution
         Gammakernel_3_len;
-        % record data parameters for debugging
-        IsRecord = 0;
-        % the current number of frames
+        % If record data parameters for debugging
+        IsRecord = false;
+        % The current number of frames
         NowFrame = 1;
-        % the par of video {save path, save name}
+        % The par of video {save path, save name}
         Video_Par = {'C:\Users\HP\Desktop','test'};
-        % the object of the visualized class
+        % The object of the visualized class
         H;
         % A function to customize the format of the file name for input
         % The input and output of the function are as follows:
@@ -132,6 +132,8 @@ classdef basalSTMD_Core < handle
         get_ImageName;
         % A parameter controls the truncation threshold in the visualization
         visualize_Threshold;
+        % If open the menubar and toolbar in figure handle
+        IsTestPatterinVisualization = false;
     end
     properties(Access = protected, Hidden)
         HalfWaveR = @(x)ClassSTMD.Half_Wave_Rectification(x);
@@ -143,13 +145,13 @@ classdef basalSTMD_Core < handle
         end
         % Some initialization kernel function
         function init_GaussFilter(self)
-            % initialize the GaussFilter of retina layer
+            % Initialize the GaussFilter of retina layer
             self.GaussFilter = fspecial('gaussian',...
                 self.GaussFilter_SIZE,...
                 self.GaussFilter_SIGMA);
         end
         function init_Gammakernel_3(self)
-            % initialize the Gammakernel3 of medulla layer
+            % Initialize the Gammakernel3 of medulla layer
             self.Gammakernel_3 = ClassSTMD.ToolFun.Generalize_Gammakernel(...
                 self.Gammakernel_3_Order,...
                 self.Gammakernel_3_Tau,...
@@ -160,13 +162,13 @@ classdef basalSTMD_Core < handle
         Init(self); % Initialize function
         getImageName(self); % Set the name format of the image
         Read_Image2gray(self); % Accept input and perform RGB binarization
-        Retina(self); % retina layer
-        Lamina(self); % lamina layer
-        Medulla(self); % medulla layer
-        Lobula(self); % lobula layer
+        Retina(self); % Tetina layer
+        Lamina(self); % Lamina layer
+        Medulla(self); % Medulla layer
+        Lobula(self); % Lobula layer
         RecordOutput(self); % Record output
-        Visualize(self); % visualization
-        Run(self); % start function of small target motion detector
+        Visualize(self); % Visualization
+        Run(self); % Start function of small target motion detector
     end
     
 end

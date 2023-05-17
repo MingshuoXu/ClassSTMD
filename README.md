@@ -1,2 +1,3 @@
-# This is a package of STMD models, including ESTMD, DSTMD, and frac-STMD. 
-# Programmatically, they are all based on basalSTMD and are implemented using class inheritance.
+# This is a Matlab package of STMD (small target motion detector) models.
+
+# Programmatically, the class of basalSTMD_Core is the father class of all STMD-based model.

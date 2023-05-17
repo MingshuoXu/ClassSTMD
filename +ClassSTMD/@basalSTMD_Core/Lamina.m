@@ -4,7 +4,7 @@ function Lamina(self)
     if isempty(self.Cell_Photoreceptors_Output{end-1})
         self.Lamina_Output = self.Photoreceptors_Output;
     else
-        % first order difference
+        % First order difference
         self.Lamina_Output...
             = self.Photoreceptors_Output ...
             - self.Cell_Photoreceptors_Output{end-1};

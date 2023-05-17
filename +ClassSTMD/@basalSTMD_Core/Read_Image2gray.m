@@ -1,14 +1,14 @@
 function Read_Image2gray(self)
-    %Read_Image2gray read input image and perform RGB binarization
+    %Read_Image2gray Load input image and perform RGB binarization
     self.getImageName();
     try
-        % read input image
+        % Load the input image
         self.original_image = imread(self.ImageName); 
         % RGB binarization
         self.Input = double(rgb2gray(self.original_image)); 
-        self.InputState = 1;
+        self.InputState = true;
     catch
-        self.InputState = 0;
+        self.InputState = flase;
         self.EndFrame = self.NowFrame - 1;
         self.Cell_Output(self.NowFrame:end) = [];
     end

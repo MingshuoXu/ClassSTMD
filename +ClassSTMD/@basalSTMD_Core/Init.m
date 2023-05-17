@@ -1,7 +1,7 @@
 function Init(self)
     %Init Initialize function
     
-    % weakly dependent variable
+    % Weakly dependent variable
     if isempty(self.Gammakernel_3_len)
         self.Gammakernel_3_len = 3 * ceil(self.Gammakernel_3_Tau);
     end
@@ -12,25 +12,25 @@ function Init(self)
     % Real-time detection, dead loop
     if self.EndFrame == 0
         self.StartFrame = 1;
-        self.Isvisualize = 1;
+        self.Isvisualize = true;
         if isempty(self.IsRecordOutput)
-            self.IsRecordOutput = 0;
+            self.IsRecordOutput = false;
         end
     elseif isempty(self.IsRecordOutput)
-        self.IsRecordOutput = 1;
+        self.IsRecordOutput = true;
     end
     
-    % init kernel
+    % Init kernel
     self.init_GaussFilter();
     self.init_Gammakernel_3();
     self.InhibitionKernel_W2 = ...
         ClassSTMD.ToolFun.Generalize_Lateral_InhibitionKernel_W2();
     
-    % gets the data set picture size
+    % Get the data set picture size
     self.NowFrame = self.StartFrame;
     self.Read_Image2gray();
     
-    % allocate memory
+    % Allocate memory
     [self.IMAGE_H,self.IMAGE_W] = size(self.Input);
     
     self.Cell_Photoreceptors_Output = cell(self.LMCs_len, 1);
@@ -41,28 +41,30 @@ function Init(self)
         self.Cell_Output = cell(self.EndFrame, 1);
     end
     
-    % instantiate the visualization class and assign the handle
-    if self.Isvisualize == 1 ...
-            || self.IsWaitbar == 1 ...
-            || self.IsSaveAsVideo == 1
+    % Instantiate the visualization class and assign the handle
+    if self.Isvisualize || self.IsWaitbar || self.IsSaveAsVideo
         class_ = whos('self');
         class_name = class_.class;
         self.H = ClassSTMD.visualization(class_name);
-        if self.IsSaveAsVideo == 1
+        if self.IsSaveAsVideo
             % Save the visual output as a video
-            self.H.IsSaveAsVideo = 1;
-            self.Isvisualize = 1;
+            self.H.IsSaveAsVideo = true;
+            self.Isvisualize = true;
             self.H.SavePath = self.Video_Par{1};
             self.H.VideoName = self.Video_Par{2};
         end
-        if self.Isvisualize == 1
+        if self.Isvisualize
             % Instantiate the figure handle class
+            if self.IsTestPatterinVisualization
+                self.H.IsTestPatter = true;
+            end
             self.H.Establish_fig_handle();
+            
             if ~isempty(self.visualize_Threshold)
                 self.H.Show_Threshold = self.visualize_Threshold;
             end
         end
-        if self.IsWaitbar == 1
+        if self.IsWaitbar
             % Instantiate the figure handle class
             self.H.Establish_bar_handle();
         end

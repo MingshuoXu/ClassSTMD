@@ -9,15 +9,17 @@ classdef visualization < handle
         v_h; % figure handle
         wait_h; % waitbar handle
         Show_Threshold = 0.8;
-        MaxOperation_radius = 15;
-        IsSaveAsVideo = 0;
+        NMS_radius = 15;
+        IsSaveAsVideo = false;
         SavePath;
         VideoName;
         STMD_class_name;
+        IsTestPatter = false;
     end
     properties(Hidden)
-        SaveState = 0;
+        SaveState = false;
         VideoObj;
+        tic_t0;
     end
     
     methods
@@ -27,27 +29,31 @@ classdef visualization < handle
             elseif nargin == 0
                 self.STMD_class_name = 'none';
             else
-                error('The constructor of a visual class takes at most one input parameter!');
+                error(['The constructor of a visual class',...
+                    ' takes at most one input parameter!']);
             end
         end
         
         function Establish_fig_handle(self)
             self.v_h = figure(...
-                'name',        ['visualization--',self.STMD_class_name],...
-                'numbertitle', 'off',...
-                'position',    [450,50,800,500] );
-            % set(self.v_h,'menubar','none','toolbar','none');
+                'Name'          , ['visualization--', self.STMD_class_name],...
+                'NumberTitle'   , 'off',...
+                'Position'      , [450,50,800,500] );
+            if ~self.IsTestPatter
+                set(self.v_h,'menubar','none','toolbar','none');
+            end
+            fprintf('visualizating the output, enter ''e'' to exit\n');
         end
         
         function Establish_bar_handle(self)
-            self.wait_h = waitbar(                  ...
+            self.wait_h = waitbar(...
                 0           , 'Start running'       ,...
                 'name'      , self.STMD_class_name  ,...
                 'Position'  , [450,450,270,50]      );
-            tic;
+            self.tic_t0 = tic;
         end
         
-        function show_STMD(self,NowFrame,Original_Image,Output,Direction)
+        function show_STMD(self, NowFrame, Original_Image, Output, Direction)
             figure(self.v_h);
             imshow(Original_Image);
             % This is to keep the window consistent when saving as video
@@ -60,14 +66,14 @@ classdef visualization < handle
             else
                 return;
             end
-            % MaxOperation
-            temp = ClassSTMD.MaxOperation(temp,self.MaxOperation_radius);
+            % NMS
+            temp = ClassSTMD.NMS(temp, self.NMS_radius);
             
-            [index_x,index_y] = find(temp>self.Show_Threshold); % Threshold
+            [index_x, index_y] = find(temp > self.Show_Threshold); 
             hold on;
-            plot(index_y,index_x,'o',...
-                'MarkerEdgeColor','r',...
-                'MarkerSize',5);
+            plot(index_y, index_x   , 'o'   ,...
+                'MarkerEdgeColor'   , 'r'   ,...
+                'MarkerSize'        ,  5    );
             
             if nargin > 4 % Direction
                 U = cos(Direction);
@@ -98,11 +104,12 @@ classdef visualization < handle
             if self.SaveState == 0
                 if isempty(self.SavePath)
                     self.SavePath = pwd;
-                elseif ~isdir(self.SavePath)
+                elseif ~isfolder(self.SavePath)
                     mkdir(self.SavePath)
-                    if ~isdir(self.SavePath)
+                    if ~isfolder(self.SavePath)
                         error([self.SavePath,...
-                            ' is not a folder and cannot be created automatically.']);
+                            ' is not a folder and',...
+                            ' cannot be created automatically.']);
                     end
                 end
                 if isempty(self.VideoName)
@@ -115,7 +122,7 @@ classdef visualization < handle
                 filename = [filename,'.',self.VideoObj.FileFormat];
                 fprintf('Visual output video is saved as ''%s''.\n',filename);
                 open(self.VideoObj);
-                self.SaveState = 1;
+                self.SaveState = true;
             end
             currFrame = getframe(self.v_h);
             writeVideo(self.VideoObj,currFrame);
@@ -128,18 +135,22 @@ classdef visualization < handle
                 wait_ = 0;
             end
             
-            TimeWithFrame = toc;
+            TimeWithFrame = toc(self.tic_t0);
             waitbar_str = ...
-                sprintf('The current frame is %d, last frame took %.2fs.',...
-                t,TimeWithFrame);
+                sprintf('current frame: %d; elapsed time: %.3f s/frame.',...
+                t, TimeWithFrame);
             self.wait_h = waitbar(wait_,self.wait_h,waitbar_str);
-            tic;
+            self.tic_t0 = tic;
         end
         
         function delete(self)
             close(self.VideoObj);
-            close(self.wait_h);
-            close(self.v_h);
+            try %#ok<TRYNC> 
+                close(self.wait_h);
+            end
+            try %#ok<TRYNC> 
+                close(self.v_h);
+            end
         end
         
     end % end methods
