@@ -5,7 +5,7 @@ addpath(path_pwd(1:end-15));
 import ClassSTMD.*;
 
 %% Instantiation
-demo_obj = ESTMD_Core();
+demo_obj = fracSTMD_Core();
 
 %{
 basalSTMD_Core
@@ -33,9 +33,12 @@ demo_obj.IsSaveAsVideo = true; % Is savethe Visualize video
 demo_obj.Video_Par = {'.\result','basalESTMD'};
 
 %% Set parameters
-demo_obj.StartFrame = 200; % Start frame, default 1
+demo_obj.StartFrame = 1; % Start frame, default 1
 demo_obj.EndFrame = 300; % End frame, if set to 0, will always run upto stop
 demo_obj.SamplingFrequency = 200;
+demo_obj.Gammakernel_3_Tau = ...
+    demo_obj.Gammakernel_3_Tau * demo_obj.SamplingFrequency /1000;
+
 %{
 obj.property = value ; % set the parameter for model
 ...

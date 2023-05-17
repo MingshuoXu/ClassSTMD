@@ -8,7 +8,7 @@ function Read_Image2gray(self)
         self.Input = double(rgb2gray(self.original_image)); 
         self.InputState = true;
     catch
-        self.InputState = flase;
+        self.InputState = false;
         self.EndFrame = self.NowFrame - 1;
         self.Cell_Output(self.NowFrame:end) = [];
     end
