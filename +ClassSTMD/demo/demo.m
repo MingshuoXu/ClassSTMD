@@ -34,10 +34,15 @@ demo_obj.Video_Par = {'.\result', whos('demo_obj').class(11:end-5)};
 
 %% Set parameters
 demo_obj.StartFrame = 1; % Start frame, default 1
-demo_obj.EndFrame = 300; % End frame, if set to 0, will always run upto stop
-demo_obj.SamplingFrequency = 200;
-demo_obj.Gammakernel_3_Tau = ...
-    demo_obj.Gammakernel_3_Tau * demo_obj.SamplingFrequency /1000;
+demo_obj.EndFrame = 120; % End frame, if set to 0, will always run upto stop
+demo_obj.SamplingFrequency = 240;
+try %#ok<TRYNC> 
+    % fracSTMD
+    demo_obj.FractionalDerivative_Order = 0.8;
+catch
+    demo_obj.Gammakernel_3_Order = 1;
+end
+demo_obj.Gammakernel_3_Tau = 1;
 
 %{
 obj.property = value ; % set the parameter for model

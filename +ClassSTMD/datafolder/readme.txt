@@ -1,1 +1,0 @@
-Attention please: these Image are caputed by 200 Hz sampling frequency.
