@@ -21,10 +21,8 @@ classdef ToolFun < handle
             Gamma = Gamma / sum(Gamma(:)); %归一化
         end
         
-        function kernel_F = Generalize_FractionalDerivativeKernel(alpha,wide)
-            % 本函数用于输出一个离散化的Gamma向量,自变量 t 的取值区间为[0，Wide-1]，一个Wide个值。
-            % 注意，这里生成的核不适用系统的conv函数，因为这里的核不是对称的
-            %参数说明：wide为向量长度；  Tau和Order为Gamma函数的参数；
+        function varargout = Generalize_FractionalDerivativeKernel(alpha,wide)
+            
             if wide < 2
                 wide = 2;
             end
@@ -32,12 +30,14 @@ classdef ToolFun < handle
             kernel_F = zeros(1, wide);
             if alpha == 1
                 kernel_K(1) = 1;
+                sum_Kernel = 1;
             elseif alpha > 0 && alpha < 1
                 for k = 1:wide-1
                     t = k-1;
                     kernel_K(1,k) = exp(-alpha*t/(1-alpha)) / (1-alpha);
                 end
-                kernel_K = kernel_K / sum(kernel_K); %归一化
+                sum_Kernel = sum(kernel_K);
+                kernel_K = kernel_K / sum_Kernel; %归一化
             else
                 error('只接受alpha在(0,1]之间');
             end
@@ -45,6 +45,14 @@ classdef ToolFun < handle
             kernel_F(1) = kernel_K(1);
             kernel_F(2:end-1) = kernel_K(2:end) - kernel_K(1:end-1);
             kernel_F(end) = - kernel_K(end);
+
+            if nargout == 1
+                varargout = {kernel_K};
+            elseif nargout == 2
+                varargout = {kernel_K, kernel_F};
+            elseif nargout == 3
+                varargout = {kernel_K, kernel_F, sum_Kernel};
+            end
         end
         
         function InhibitionKernel_W2 = ...

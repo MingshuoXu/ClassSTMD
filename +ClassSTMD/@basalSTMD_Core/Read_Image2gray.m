@@ -10,6 +10,6 @@ function Read_Image2gray(self)
     catch
         self.InputState = false;
         self.EndFrame = self.NowFrame - 1;
-        self.Cell_Output(self.NowFrame:end) = [];
+        fprintf('No Input in %d Frame, loop termination.\n', self.NowFrame);
     end
 end

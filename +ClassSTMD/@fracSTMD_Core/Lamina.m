@@ -6,9 +6,19 @@ function Lamina(self)
     %   Applications 1 (2) (2015) 73¨C85.
     %
     %   Author: Mingshuo Xu
+    %   E-mail: mingshuoxu99@gmail.com
     %   Date: 2022-01-10
-    %   LastEditTime: 2022-08-11  
+    %   LastEditTime: 2023-06-06
+
     
+    Diff_Retine = ...
+        self.Cell_Photoreceptors_Output{2} ...
+        - self.Cell_Photoreceptors_Output{1};
+    self.Lamina_Output = ...
+        self.Lamina_cur * Diff_Retine...
+        + self.Lamina_pre * self.Lamina_Output;
+
+    %{
     % fractional derivative kernel
     self.Lamina_Output...
         = ClassSTMD.Cell_Conv_N_1(          ...
@@ -18,5 +28,6 @@ function Lamina(self)
     self.Lamina_Output = self.Lamina_Output .* self.SamplingFrequency;
     % This line of code has no impact on the detection performance of the model. 
     % In practice, it can be omitted to reduce the amount of calculation.
+    %}
 end
 

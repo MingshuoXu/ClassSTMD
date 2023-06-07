@@ -6,15 +6,18 @@ function Run(self)
     
     % Frame by frame work
     while true
-        self.Read_Image2gray(); % matrix the input image
-        
-        %% Set the stop statement
-        if ~self.InputState || ...
-                (self.EndFrame>0 && self.NowFrame > self.EndFrame)
+        if self.EndFrame>0 && self.NowFrame > self.EndFrame
             break;
+        else
+            self.Read_Image2gray(); % gray the input image
+            if ~self.InputState
+                % Set the stop statement
+                break;
+            end
         end        
-        pause(0.0001);
+        
         if self.Isvisualize
+            pause(0.00001);
             if strcmpi(get(self.H.v_h,'CurrentCharacter'),'e')
                 % Detection exits the dead-loop mode:
                 % Click <e> of the keyboard in the graph window

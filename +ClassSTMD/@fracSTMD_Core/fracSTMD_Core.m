@@ -22,16 +22,22 @@ classdef fracSTMD_Core < ClassSTMD.basalSTMD_Core
     %   Applications 1 (2) (2015) 73¨C85.
     %
     %   Author: Mingshuo Xu
+    %   E-mail: mingshuoxu99@gmail.com
     %   Date: 2022-01-10
-    %   LastEditTime: 2022-08-11  
+    %   LastEditTime: 2022-08-11 
+    %   
     
     properties
         FractionalDerivative_Order;
         FractionalDerivativeKernel_len;
     end
     properties(Hidden)
-        FractionalDerivativeKernel;  
+        FractionalDerivativeKernel; 
+        Diff_FDK;
+        norm_M;
         FD_Integral_Time = 0.1;
+        Lamina_cur;
+        Lamina_pre;
     end
     
     methods
@@ -47,11 +53,17 @@ classdef fracSTMD_Core < ClassSTMD.basalSTMD_Core
                 self.FractionalDerivative_Order = ...
                     min(0.8, 100/self.SamplingFrequency+0.1);
             end
-            self.FractionalDerivativeKernel = ...
+            [self.FractionalDerivativeKernel, self.Diff_FDK, self.norm_M] = ...
                 ClassSTMD.ToolFun.Generalize_FractionalDerivativeKernel(...
                 self.FractionalDerivative_Order,...
                 self.FractionalDerivativeKernel_len);
+
+            alpha_ = self.FractionalDerivative_Order;
+            fps_ = self.SamplingFrequency;
+            self.Lamina_cur = self.norm_M / (1-alpha_);
+            self.Lamina_pre = exp( -(1-alpha_) * fps_ / alpha_ );
         end
+
         % Initialize function
         function Init(self)
             % weakly dependent variable
@@ -70,6 +82,12 @@ classdef fracSTMD_Core < ClassSTMD.basalSTMD_Core
             self.InhibitionKernel_W2 = ...
                 ClassSTMD.ToolFun.Generalize_Lateral_InhibitionKernel_W2(...
                 15, 1.5, 3, 1.8, 0, 1, 3);
+            % Allocate memory
+            self.Cell_Photoreceptors_Output = cell(2,1);
+            [self.Cell_Photoreceptors_Output{1},...
+             self.Cell_Photoreceptors_Output{2},...
+             self.Lamina_Output]...
+             = deal(zeros(self.IMAGE_H,self.IMAGE_W));
         end
         
     end% end methods
