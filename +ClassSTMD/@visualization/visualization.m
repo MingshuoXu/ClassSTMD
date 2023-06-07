@@ -113,7 +113,7 @@ classdef visualization < handle
                     end
                 end
                 if isempty(self.VideoName)
-                    self.VideoName = 'visualization_video';
+                    self.VideoName = 'visualization_video.avi';
                 end
                 filename = fullfile(self.SavePath,self.VideoName);
                 self.VideoObj = VideoWriter(filename);

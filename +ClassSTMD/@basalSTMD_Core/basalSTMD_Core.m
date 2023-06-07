@@ -49,7 +49,7 @@ classdef basalSTMD_Core < handle
         % The end frame of model working
         EndFrame = 450;
         % Sampling frequency of the input video
-        SamplingFrequency;
+        SamplingFrequency = -1;
         % A parameter about whether to display progress bar
         IsWaitbar = true;
         % A parameter about whether to visualize the output

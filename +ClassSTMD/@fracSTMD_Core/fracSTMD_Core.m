@@ -44,16 +44,22 @@ classdef fracSTMD_Core < ClassSTMD.basalSTMD_Core
 
         % Some initialization kernel function
         function init_FractionalDerivativekernel(self)
-            if isempty(self.SamplingFrequency)
+            while self.SamplingFrequency < 1 || ...
+                    isnan(self.SamplingFrequency)
+                warning(['Sampling Frequency must be an integer',...
+                    ' greater than 1.']);
                 Str_Input1 = input('Please input SamplingFrequency: ','s');
-                self.SamplingFrequency = str2num(Str_Input1);
+                self.SamplingFrequency = str2double(Str_Input1);
             end
             while self.FractionalDerivative_Order > 1 ||...
-                    self.FractionalDerivative_Order <= 0
-                warning('alpha must in the interval (0,1]. ');
+                    self.FractionalDerivative_Order <= 0 ||...
+                    isnan(self.FractionalDerivative_Order)
+                warning(['Fractional Difference Order must be',...
+                    ' a float in the interval (0,1].']);
                 Str_Input2 = input('Please input alpha: ','s');
-                self.FractionalDerivative_Order = str2num(Str_Input2);
+                self.FractionalDerivative_Order = str2double(Str_Input2);
             end
+            
             alpha_ = self.FractionalDerivative_Order;
             fps_ = self.SamplingFrequency;
             self.Lamina_pre = exp( -(1-alpha_)/alpha_ );

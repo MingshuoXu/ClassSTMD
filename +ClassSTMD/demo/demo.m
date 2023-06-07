@@ -55,7 +55,7 @@ demo_obj.IsWaitbar = true; %   The default value is false
 demo_obj.Isvisualize = true; % Visualization or not
 
 %% Program started
-demo_obj.Run() 
+demo_obj.Run();
 
 
 
