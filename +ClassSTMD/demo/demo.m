@@ -36,7 +36,7 @@ demo_obj.Video_Par = {'.\result', whos('demo_obj').class(11:end-5)};
 demo_obj.StartFrame = 1; % Start frame, default 1
 demo_obj.EndFrame = 120; % End frame, if set to 0, will always run upto stop
 demo_obj.SamplingFrequency = 240;
-try %#ok<TRYNC> 
+try
     % fracSTMD
     demo_obj.FractionalDerivative_Order = 0.8;
 catch

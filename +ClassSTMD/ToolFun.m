@@ -2,7 +2,9 @@ classdef ToolFun < handle
     %TOOLFUN 此处显示有关此类的摘要
     %   此处显示详细说明
     methods(Static)
-        % 类的静态方法，无法访问类的一般属性和方法
+        % Static methods of a class that do not have access 
+        % to general properties and methods of the class
+
         function Gamma = Generalize_Gammakernel(Order,Tau,wide)
             % 本函数用于输出一个离散化的Gamma向量,自变量 t 的取值区间为[0，Wide-1]，一个Wide个值。
             % 注意，这里生成的核不适用系统的conv函数，因为这里的核不是对称的
@@ -21,31 +23,33 @@ classdef ToolFun < handle
             Gamma = Gamma / sum(Gamma(:)); %归一化
         end
         
-        function varargout = Generalize_FractionalDerivativeKernel(alpha,wide)
-            
+        %Generalize_FractionalDifferenceKernel
+        %{
+        function varargout = Generalize_FractionalDifferenceKernel(alpha,wide)
             if wide < 2
                 wide = 2;
             end
-            kernel_K = zeros(1, wide-1); %初始化
-            kernel_F = zeros(1, wide);
+            kernel_K = zeros(1, wide); 
+            kernel_F = zeros(1, wide+1);
+            % Generalize Fractional Difference Kernel
             if alpha == 1
                 kernel_K(1) = 1;
                 sum_Kernel = 1;
-            elseif alpha > 0 && alpha < 1
-                for k = 1:wide-1
+            elseif 0 < alpha && alpha < 1
+                for k = 1:wide
                     t = k-1;
                     kernel_K(1,k) = exp(-alpha*t/(1-alpha)) / (1-alpha);
                 end
-                sum_Kernel = sum(kernel_K);
-                kernel_K = kernel_K / sum_Kernel; %归一化
+                sum_Kernel = 1/sum(kernel_K); % M(\alpha)
+                kernel_K = kernel_K * sum_Kernel; % normalization
             else
-                error('只接受alpha在(0,1]之间');
+                error('alpha must in the interval (0,1]. \n');
             end
-            % 对卷积核kernel_K差分
+            % difference for kernel_K
             kernel_F(1) = kernel_K(1);
             kernel_F(2:end-1) = kernel_K(2:end) - kernel_K(1:end-1);
             kernel_F(end) = - kernel_K(end);
-
+            % output
             if nargout == 1
                 varargout = {kernel_K};
             elseif nargout == 2
@@ -54,11 +58,13 @@ classdef ToolFun < handle
                 varargout = {kernel_K, kernel_F, sum_Kernel};
             end
         end
-        
+        %}
+
+        %Generalize_Lateral_InhibitionKernel_W2
         function InhibitionKernel_W2 = ...
                 Generalize_Lateral_InhibitionKernel_W2(...
                 KernelSize,Sigma1,Sigma2,e,rho,A,B)
-            %Generalize_Lateral_InhibitionKernel_W2
+            
             % 该函数用于生成 DSTMD 的侧面抑制卷积核, DoG 形式
             % W(x,y) = A*[g_1(x,y)] - B[-g_1(x,y)]    % [x]   max(x,0)
             % g_1 = G_1(x,y) - e*G_2(x,y) - rho
@@ -190,8 +196,8 @@ classdef ToolFun < handle
         
         function Filters = Generalize_T1_Neural_Kernels(...
                 W_T_FilterNum, FilterSize, Alpha, Sigma)
-            % Ref: Construction and Evaluation of an Integrated Dynamical Model of
-            % Visual Motion Perception
+            % Ref: Construction and Evaluation of an Integrated Dynamical 
+            % Model of Visual Motion Perception
             
             % 函数说明
             % 该函数用于生成 STMDPlus 的的 T1 神经元的卷积核
@@ -344,54 +350,56 @@ classdef ToolFun < handle
 
         end
         
-        %%
-        %         function Output = Conv_3(Input, Kernal, head_pointer)
-        %             % 特别注意，这里输入三维矩阵，但是返回值只有二维！！！
-        %             % 三维矩阵对时间维度的卷积，节省计算量的实现方法（相对于convn）
-        %             % 只计及返回Input(:,:,end)的卷积，但这个过程要用到其他的Input(:,:,t)
-        %             % 注意到这里的Kernal是向量（MATLAB中的尺寸是1*k2）
-        %             % Input(:,:,end)对应Kernal（1); Input(:,:,end-1)对应Kernal（2)...
-        %
-        %
-        %             [m,n,k1] = size(Input);
-        %             if ~exist('head_pointer','var')
-        %                 % 设置头指针为了节省其他步骤的存储矩阵的计算用时
-        %                 head_pointer = k1;
-        %             end
-        %             Kernal = squeeze(Kernal);
-        %             if ~isvector(Kernal)
-        %                 error('The Kernel must be a vector! ');
-        %             end
-        %
-        %             k2 = length(Kernal);
-        %             len = min(k1,k2);
-        %             Output = zeros(m,n);
-        %
-        %             for t = 1:len
-        %                 if abs(Kernal(t)) > 1e-16
-        %                     j = mod(head_pointer-t, k1);
-        %                     % mod后的取值范围最小为0，但是MATLAB的数组下标从1开始，因此统一加1
-        %                     Output = Output + Input(:,:,j+1) * Kernal(t);
-        %                 end
-        %             end
-        %
-        %         end
+        %Conv_3
+        %{
+        function Output = Conv_3(Input, Kernal, head_pointer)
+            % 特别注意，这里输入三维矩阵，但是返回值只有二维！！！
+            % 三维矩阵对时间维度的卷积，节省计算量的实现方法（相对于convn）
+            % 只计及返回Input(:,:,end)的卷积，但这个过程要用到其他的Input(:,:,t)
+            % 注意到这里的Kernal是向量（MATLAB中的尺寸是1*k2）
+            % Input(:,:,end)对应Kernal（1); Input(:,:,end-1)对应Kernal（2)...
 
-        %         function Output = Conv_3_3(Input,Kernal)
-        %             % 特别注意，这里输入三维矩阵，但是返回值只有二维！！！
-        %             % 三维矩阵对时空核的卷积，节省计算量的实现方法（相对于convn）
-        %             % 只计及返回Input(:,:,end)的卷积，但这个过程要用到其他的Input(:,:,t)
-        %             % 注意到这里的Kernal也是三维的
-        %             % Input(:,:,end)对应Kernal（:,:,1); Input(:,:,end-1)对应Kernal（:,:,2)...
-        %             [m,n,k1] = size(Input);
-        %             k2 = size(Kernal,3);
-        %             length = min(k1,k2);
-        %             Output = zeros(m,n);
-        %             for t = 1:length
-        %                 Output = Output + conv2(Input(:,:,k1+1-t), Kernal(:,:,t), 'same');
-        %             end
-        %         end
-        
+
+            [m,n,k1] = size(Input);
+            if ~exist('head_pointer','var')
+                % 设置头指针为了节省其他步骤的存储矩阵的计算用时
+                head_pointer = k1;
+            end
+            Kernal = squeeze(Kernal);
+            if ~isvector(Kernal)
+                error('The Kernel must be a vector! ');
+            end
+
+            k2 = length(Kernal);
+            len = min(k1,k2);
+            Output = zeros(m,n);
+
+            for t = 1:len
+                if abs(Kernal(t)) > 1e-16
+                    j = mod(head_pointer-t, k1);
+                    % mod后的取值范围最小为0，但是MATLAB的数组下标从1开始，因此统一加1
+                    Output = Output + Input(:,:,j+1) * Kernal(t);
+                end
+            end
+
+        end
+
+        function Output = Conv_3_3(Input,Kernal)
+            % 特别注意，这里输入三维矩阵，但是返回值只有二维！！！
+            % 三维矩阵对时空核的卷积，节省计算量的实现方法（相对于convn）
+            % 只计及返回Input(:,:,end)的卷积，但这个过程要用到其他的Input(:,:,t)
+            % 注意到这里的Kernal也是三维的
+            % Input(:,:,end)对应Kernal（:,:,1); Input(:,:,end-1)对应Kernal（:,:,2)...
+            [m,n,k1] = size(Input);
+            k2 = size(Kernal,3);
+            length = min(k1,k2);
+            Output = zeros(m,n);
+            for t = 1:length
+                Output = Output + conv2(Input(:,:,k1+1-t), Kernal(:,:,t), 'same');
+            end
+        end
+        %}
+
     end % methods(Static)
     
 end
