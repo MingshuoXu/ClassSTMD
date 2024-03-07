@@ -1,6 +1,6 @@
 # This is version 1 of the STMD (Small Target Motion Detector) models based Matlab package.
 # 作者：Mingshuo Xu
-#The new version has been upgraded since March 6, 2024, where you can find more information.
+# The new version has been upgraded since March 6, 2024, where you can find more information.
 # version 2.0: https://github.com/MingshuoXu/Small-Target-Motion-Detectors
 
 ------------------------
